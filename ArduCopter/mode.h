@@ -325,6 +325,12 @@ public:
     void air_mode_aux_changed();
     bool allows_save_trim() const override { return true; }
     bool allows_flip() const override { return true; }
+    void pilot_input();
+    void channel_arming();
+    void imu_read();
+    void battery_check();
+    void motor_pwm(uint8_t);
+
 
 protected:
 
@@ -1449,6 +1455,18 @@ public:
     bool allows_save_trim() const override { return true; }
     bool allows_autotune() const override { return true; }
     bool allows_flip() const override { return true; }
+    void pilot_input();
+    void quad_states();
+    void attitude_altitude_controller();
+    float sat_I_gain_ph_th(float sum);
+    float sat_I_gain_psi(float sum);
+    int Inverse_thrust_function(float Force);
+    float saturation_for_yaw_angle_error(float error);
+    float saturation_for_roll_pitch_angle_error(float error);
+
+
+
+
 
 protected:
 
