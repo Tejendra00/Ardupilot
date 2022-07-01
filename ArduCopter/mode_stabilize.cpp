@@ -140,10 +140,48 @@ void ModeStabilize::run()
         }
 ///////////// getting pilot inputs  /////////////
         pilot_input();
+    ///////////// getting states  /////////////
+        quad_states();
 
 
     }
     
+}
+
+void ModeStabilize::quad_states(){
+    // Position in inertial reference frame
+    quad_x =    inertial_nav.get_position_neu_cm().x / 100.0;
+    quad_y =   -inertial_nav.get_position_neu_cm().y / 100.0;
+    quad_z =    inertial_nav.get_position_neu_cm().z / 100.0;
+
+    quad_x =   quad_x - quad_x_ini;
+    quad_y =   quad_y - quad_y_ini;
+    quad_z =   quad_z - quad_z_ini;
+
+    // linear velocity in inertial frame of reference
+    quad_x_dot =    inertial_nav.get_velocity_neu_cms().x /100.0;
+    quad_y_dot =   -inertial_nav.get_velocity_neu_cms().y /100.0;
+    quad_z_dot =    inertial_nav.get_velocity_neu_cms().z /100.0;
+
+    // linear velocity in body reference frame
+    // quad_x_dot =  (cosf(yaw_initially)*quad_x + sinf(yaw_initially)*quad_y);
+    // quad_y_dot = (-sinf(yaw_initially)*quad_x + cosf(yaw_initially)*quad_y);
+
+    imu_roll        =  (ahrs.roll_sensor)  / 100.0;     // degrees 
+    imu_pitch       = -(ahrs.pitch_sensor) / 100.0;     // degrees 
+    imu_yaw         = 360.0-(ahrs.yaw_sensor)   / 100.0;     // degrees 
+    imu_roll_dot    =  (ahrs.get_gyro().x);             // degrees/second
+    imu_pitch_dot   =  -(ahrs.get_gyro().y);             // degrees/second    
+    imu_yaw_dot     = -(ahrs.get_gyro().z);             // degrees/second
+    // float imu_yaw_rad   = imu_yaw * PI /180.0;
+
+    // position in body reference frame
+    // quad_x =  (cosf(yaw_initially)*quad_x + sinf(yaw_initially)*quad_y) - quad_x_ini;
+    // quad_y = (-sinf(yaw_initially)*quad_x + cosf(yaw_initially)*quad_y) - quad_y_ini;
+    // quad_z =  inertial_nav.get_position().z / 100.0 - quad_z_ini;
+
+    // hal.console->printf("roll %5.3f, pitch %5.3f, yaw %5.3f \n",imu_roll, imu_pitch, imu_yaw);
+
 }
 
 void ModeStabilize::pilot_input(){
@@ -191,4 +229,73 @@ void ModeStabilize::pilot_input(){
 
 }
 
+float ModeStabilize::saturation_for_roll_pitch_angle_error(float error){
+
+    float lim = 25.0;
+
+    if (error > lim){
+        error = lim;
+    }else if (error < -lim){
+        error = -lim;
+    }else {
+        error = error;
+    }
+    return error;
+}
+
+
+float ModeStabilize::sat_I_gain_ph_th(float sum){
+
+    float lim = 10.0;
+
+    if (sum > lim){
+        sum = lim;
+    }else if (sum < -lim){
+        sum = -lim;
+    }else {
+        sum = sum;
+    }
+    return sum;
+}
+
+float ModeStabilize::sat_I_gain_psi(float sum){
+
+    float lim = 20.0;
+
+    if (sum > lim){
+        sum = lim;
+    }else if (sum < -lim){
+        sum = -lim;
+    }else {
+        sum = sum;
+    }
+    return sum;
+}
+
+int ModeStabilize::Inverse_thrust_function(float Force_){
+    int PWM = 1200;
+
+/////////////////////////// From the quadcopter motors  ///////////////////////////
+
+    if (battvolt >= 11.5 ){PWM = 1000 * (0.9206 + (sqrtf(12.8953 + 30.3264*Force_)/(15.1632)));
+    }else{PWM = 1000 * (0.6021 + (sqrtf(33.2341 + 19.418*Force_)/(9.5740)));}
+    if (PWM > 2000){PWM = 2000;}
+    if (PWM < 1000){PWM = 1000;}
+
+    return PWM;
+}
+
+float ModeStabilize::saturation_for_yaw_angle_error(float error){
+
+    float lim = 30.0;
+
+    if (error > lim){
+        error = lim;
+    }else if (error < -lim){
+        error = -lim;
+    }else {
+        error = error;
+    }
+    return error;
+}
 
