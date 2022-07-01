@@ -109,6 +109,17 @@ float enz_IITGN_traj = 0.0;
 
 float light_on_off = 0.0;
 
+//External Force
+
+float mass = 1.236;
+float KIF_x=0.0;  //25
+float KIF_y=0.0;  //25
+float KIF_z=0.0;  //25
+float Fe_initial_x=0.0;
+float Fe_initial_y=0.0;
+float Fe_initial_z=0.0;
+float Ts=0.001;
+
 
 /*
  * Init and run calls for stabilize flight mode
@@ -568,5 +579,40 @@ float ModeStabilize::saturation_for_yaw_angle_error(float error){
         error = error;
     }
     return error;
+}
+
+/////////////////////////// Exteral Force Estimation  ///////////////////////////
+
+// Rotatiion Matrix?? Not included right now
+
+float ModeStabilize::external_force_eqns(float quad_acc, float Force_Thrust, float Fe, float KIF){ 
+    float eqf= KIF*(mass*quad_acc- Force_Thrust - Fe);
+    return eqf;
+}
+
+float ModeStabilize::RKF45(float Fe , float Force_Thrust, float quad_acc, float KIF){ 
+    float A_21 = 1/4, A_31 = 3/32, A_32 = 9/32, A_41 = 1932/2197, A_42 = -7200/2197, A_43 = 7296/2197;
+    float A_51 = 439/216, A_52 = -8 , A_53 = 3680/513, A_54 = -845/4104;
+    float B1   = 25/216, B2   = 0, B3   = 1408/2565, B4   = 2197/4104, B5 = -1/5;
+
+    float KK1     = Ts*external_force_eqns(quad_acc,Force_Thrust,Fe,KIF);
+
+    float XK2     = Fe + A_21*KK1;
+    float KK2     = Ts*external_force_eqns(quad_acc,Force_Thrust,XK2,KIF);
+
+    float XK3     = Fe + A_31*KK1 + A_32*KK2;
+    float KK3     = Ts*external_force_eqns(quad_acc,Force_Thrust,XK3,KIF);
+
+    float XK4     = Fe + A_41*KK1 + A_42*KK2 + A_43*KK3;
+    float KK4     = Ts*external_force_eqns(quad_acc,Force_Thrust,XK4,KIF);
+
+    float XK5     = Fe + A_51*KK1 + A_52*KK2 + A_53*KK3 + A_54*KK4;
+    float KK5     = Ts*external_force_eqns(quad_acc,Force_Thrust,XK5,KIF);
+
+    float XK_2    = Fe+ (B1*KK1) + (B2*KK2) + (B3*KK3) + (B4*KK4) + (B5*KK5);
+
+    return XK_2;
+
+
 }
 

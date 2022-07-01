@@ -1465,6 +1465,9 @@ public:
     int Inverse_thrust_function(float Force);
     float saturation_for_yaw_angle_error(float error);
     float saturation_for_roll_pitch_angle_error(float error);
+///////////////////////External Force////////////////////////////////////////////////
+    float external_force_eqns(float quad_acc, float Force_Thrust, float Fe, float KIF);
+    float RKF45(float Fe , float Force_Thrust, float quad_acc, float KIF);
 
 
 
