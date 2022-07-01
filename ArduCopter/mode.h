@@ -1458,6 +1458,8 @@ public:
     void pilot_input();
     void quad_states();
     void attitude_altitude_controller();
+    void custom_PID_controller(float des_phi, float des_theta, float des_psi,float des_phi_dot, float des_theta_dot, float des_psi_dot, float des_z, float des_z_dot);
+    void custom_position_controller(float x_des, float y_des, float z_des, float x_des_dot, float y_des_dot, float z_des_dot, float des_psi, float des_psi_dot);
     float sat_I_gain_ph_th(float sum);
     float sat_I_gain_psi(float sum);
     int Inverse_thrust_function(float Force);
